@@ -18,7 +18,7 @@ def parse_args():
     group.add_argument('--input-file', nargs='?')
     group.add_argument('--input-dir')
     parser.add_argument('--output-dir', required=True)
-    parser.add_argument('--scheme-file', default='questionary.xsd')
+    parser.add_argument('--scheme-file', default='questionary2.xsd')
     parser.add_argument('--transform-xslt', default='transform.xsl')
     parser.add_argument('--extract-xslt', default='extract.xsl')
     parser.add_argument('--bulletin-xslt', default='bulletin.xsl')
@@ -47,7 +47,7 @@ def format_snippet_line(file, line, pad):
 
 def print_error_log(error_log):
     for log in error_log:
-        message = log.message.replace('{http://questionary.iris-psy.org.ua/schema}', '')
+        message = log.message.replace('{https://questionary.iris-psy.org.ua/schema2}', '')
         error = (f'{log.filename}:{log.line:d}:{log.column:d} '
                  f'{log.level_name}:{log.domain_name}:{log.type_name}: {message}\n')
 
@@ -365,12 +365,12 @@ def transform_html(src_file, dst_dir, options):
 def correct_header(file):
     with open(file, 'r') as f:
         text = f.read()
-    if 'http://questionary.iris-psy.org.ua/schema' in text:
+    if 'https://questionary.iris-psy.org.ua/schema2' in text:
         return
     text = re.sub('<questionary[^>]*?(lang="[^"]+")[^>]*>',
                   '<questionary \\1\n'
-                  '             xmlns="http://questionary.iris-psy.org.ua/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
-                  '             xsi:schemaLocation="http://questionary.iris-psy.org.ua/schema https://questionary.iris-psy.org.ua/questionary.xsd">',
+                  '             xmlns="https://questionary.iris-psy.org.ua/schema2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
+                  '             xsi:schemaLocation="https://questionary.iris-psy.org.ua/schema2 https://questionary.iris-psy.org.ua/questionary2.xsd">',
                   text)
     with open(file, 'w') as f:
         f.write(text)

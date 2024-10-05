@@ -1,6 +1,6 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns="http://questionary.iris-psy.org.ua/schema"
-    targetNamespace="http://questionary.iris-psy.org.ua/schema"
+    xmlns="https://questionary.iris-psy.org.ua/schema2"
+    targetNamespace="https://questionary.iris-psy.org.ua/schema2"
     elementFormDefault="qualified">
   <xs:element name="questionary">
     <xs:complexType>

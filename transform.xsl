@@ -1,5 +1,5 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0"
-    xpath-default-namespace="http://questionary.iris-psy.org.ua/schema" >
+    xpath-default-namespace="https://questionary.iris-psy.org.ua/schema2" >
   <xsl:output omit-xml-declaration="no" indent="yes"/>
   <xsl:strip-space elements="*"/>
 
