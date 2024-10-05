@@ -50,6 +50,7 @@
       <head>
         <title>Опитувальник</title>
         <meta name="author" content="Samogot"/>
+        <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <link href="/android_asset/css/jquery.mobile.css" rel="stylesheet"/>
         <link href="/android_asset/css/style.css" rel="stylesheet"/>
