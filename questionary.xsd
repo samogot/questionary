@@ -1,0 +1,182 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns="http://questionary.iris-psy.org.ua/schema"
+    targetNamespace="http://questionary.iris-psy.org.ua/schema"
+    elementFormDefault="qualified">
+  <xs:element name="questionary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="question"/>
+          <xs:element name="stickytext">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element ref="text" minOccurs="0"/>
+                <xs:element ref="question" maxOccurs="unbounded" minOccurs="0"/>
+                <!-- <xs:element ref="script" minOccurs="0"/> -->
+              </xs:sequence>
+              <!-- <xs:attribute type="xs:string" name="type" use="optional"/> -->
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="lang"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="quest_options">
+    <xs:choice>
+      <xs:element ref="answer" maxOccurs="unbounded"/>
+      <xs:element ref="input" maxOccurs="unbounded"/>
+      <xs:element ref="subquestion" maxOccurs="unbounded"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="question">
+    <xs:complexType>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element ref="text"/>
+          <xs:choice minOccurs="0">
+            <xs:sequence>
+              <xs:group ref="quest_script"/>
+              <xs:group ref="quest_options" minOccurs="0"/>
+            </xs:sequence>
+            <xs:sequence>
+              <xs:group ref="quest_options"/>
+              <xs:group ref="quest_script" minOccurs="0"/>
+            </xs:sequence>
+          </xs:choice>
+        </xs:sequence>
+        <xs:group ref="quest_script_inside"/>
+      </xs:choice>
+      <xs:attribute type="xs:string" name="type"/>
+      <xs:attribute type="xs:byte" name="from" use="optional"/>
+      <xs:attribute type="xs:byte" name="to" use="optional"/>
+      <xs:attribute type="xs:string" name="id" use="optional"/>
+      <xs:attribute type="xs:byte" name="max" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="subquestion">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="text" minOccurs="0"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="answer" maxOccurs="unbounded"/>
+          <xs:element ref="input" maxOccurs="unbounded"/>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="type"/>
+      <xs:attribute type="xs:byte" name="from" use="optional"/>
+      <xs:attribute type="xs:byte" name="to" use="optional"/>
+      <xs:attribute type="xs:string" name="id" use="optional"/>
+      <xs:attribute type="xs:byte" name="max" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="quest_script">
+    <xs:choice>
+      <xs:element name="script" type="quest_script_type"/>
+      <xs:element name="scripts" type="quest_script_type"/>
+    </xs:choice>
+  </xs:group>
+  <xs:complexType name="quest_script_type">
+      <xs:group ref="quest_script_inside"/>
+  </xs:complexType>
+  <xs:group name="quest_script_inside">
+    <xs:sequence>
+      <xs:element name="declare" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute type="xs:string" name="id"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="load" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="beforecreate" type="xs:string"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="answer">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:element ref="input" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element ref="image" maxOccurs="unbounded" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="goto" use="optional"/>
+      <xs:attribute type="xs:string" name="id" use="optional"/>
+      <xs:attribute type="xs:string" name="parent" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="input">
+    <xs:complexType>
+      <xs:attribute type="xs:string" name="placeholder" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:group name="html-inline">
+    <xs:choice>
+      <xs:element ref="b"/>
+      <xs:element ref="i"/>
+      <xs:element ref="center"/>
+      <xs:element ref="image"/>
+      <xs:element ref="video"/>
+      <xs:element ref="br"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:element name="text">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="p"/>
+        <xs:element ref="center"/>
+        <xs:element ref="image"/>
+        <xs:element ref="ol"/>
+        <xs:element ref="ul"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="b" type="xs:string"/>
+  <xs:element name="i" type="xs:string"/>
+  <xs:element name="br"/>
+  <xs:element name="video" type="xs:string"/>
+  <xs:element name="image">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="width" type="xs:positiveInteger" use="optional"/>
+          <xs:attribute name="height" type="xs:positiveInteger" use="optional"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ul">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="li" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ol">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="li" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="p">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="center">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="li">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
