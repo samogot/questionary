@@ -26,6 +26,9 @@ def parse_args():
         '--base-url',
         default='https://questionary.iris-psy.org.ua/android_asset/run.html')
     parser.add_argument(
+        '--bulletin-url',
+        default='https://questionary.iris-psy.org.ua/bulletin.php?ind_type=all&bulletin_id=')
+    parser.add_argument(
         '--exit-url',
         default='https://questionary.iris-psy.org.ua/android_asset')
     parser.add_argument('--override', action=argparse.BooleanOptionalAction,
@@ -389,9 +392,13 @@ def process_file(file, options):
         return False
     create_url_file(os.path.join(out_dir, base_name + '.url'),
                     f'{options.base_url}#{base_name}')
+    create_url_file(os.path.join(out_dir, 'bulletin.url'),
+                    f'{options.bulletin_url}{base_name}')
+    create_url_file(os.path.join(out_dir, 'bulletin_recalc.url'),
+                    f'{options.bulletin_url}{base_name}&recalc=1')
     extract_header(file, os.path.join(out_dir, 'header.csv'),
                    options.extract_xslt)
-    create_bulletin_stub(file, os.path.join(out_dir, 'bulletin_xx.hjson'),
+    create_bulletin_stub(file, os.path.join(out_dir, 'bulletin.hjson'),
                          options.bulletin_xslt, base_name, options.bulletin_all_combinations)
     transform_html(file, out_dir, options)
     if options.remove_input:
