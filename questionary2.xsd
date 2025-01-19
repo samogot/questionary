@@ -114,6 +114,7 @@
       <xs:element ref="center"/>
       <xs:element ref="image"/>
       <xs:element ref="video"/>
+      <xs:element ref="audio"/>
       <xs:element ref="br"/>
     </xs:choice>
   </xs:group>
@@ -130,10 +131,9 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="b" type="xs:string"/>
-  <xs:element name="i" type="xs:string"/>
   <xs:element name="br"/>
   <xs:element name="video" type="xs:string"/>
+  <xs:element name="audio" type="xs:string"/>
   <xs:element name="image">
     <xs:complexType>
       <xs:simpleContent>
@@ -173,6 +173,20 @@
     </xs:complexType>
   </xs:element>
   <xs:element name="li">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="b">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="i">
     <xs:complexType mixed="true">
       <xs:sequence>
         <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
