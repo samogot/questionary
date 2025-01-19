@@ -5,6 +5,11 @@
     <HTMLCodeStyleSettings>
       <option name="HTML_TEXT_WRAP" value="0" />
     </HTMLCodeStyleSettings>
+    <SqlCodeStyleSettings version="7">
+      <option name="KEYWORD_CASE" value="2" />
+      <option name="TYPE_CASE" value="3" />
+      <option name="BUILT_IN_CASE" value="1" />
+    </SqlCodeStyleSettings>
     <XML>
       <option name="XML_TEXT_WRAP" value="0" />
       <option name="XML_KEEP_BLANK_LINES" value="3" />
