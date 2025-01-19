@@ -5,11 +5,15 @@ import shutil
 import sys
 import textwrap
 import hjson
+import contextlib
+import traceback
 
 import re
 from lxml import etree
 import saxonche
 import linecache
+
+has_errors = False
 
 
 def parse_args():
@@ -64,8 +68,10 @@ def print_error_log(error_log):
 
 
 def validate(src_path: str, schema_path: str, ignore_schema: bool):
+    global has_errors
     if not os.path.exists(src_path):
         print(f'File {src_path!r} not found', file=sys.stderr)
+        has_errors = True
         return False
     schema = etree.XMLSchema(file=schema_path)
     parser = etree.XMLParser()
@@ -74,17 +80,21 @@ def validate(src_path: str, schema_path: str, ignore_schema: bool):
     except etree.XMLSyntaxError as e:
         if e.error_log:
             print_error_log(e.error_log)
+            has_errors = True
             return False
         # noinspection PyProtectedMember
         error_code = etree.ErrorTypes._getName(e.code, f'unknown_{e.code}')
         print(f'{str(e.filename)}:{e.lineno}:{e.offset} {error_code}: {e.msg}',
               file=sys.stderr)
+        has_errors = True
         return False
     if parser.error_log:
         print_error_log(parser.error_log)
+        has_errors = True
         return False
     if not schema.validate(xmldoc):
         print_error_log(schema.error_log)
+        has_errors = True
         return ignore_schema
     return True
 
@@ -96,8 +106,8 @@ def extract_header(src_path, dst_path, xslt_path):
         xsltproc = proc.new_xslt30_processor()
         header_xml = xsltproc.transform_to_value(source_file=src_path,
                                                  stylesheet_file=xslt_path)
-        with open(dst_path, 'w') as f:
-            csv_writer = csv.DictWriter(f, fieldnames=attrs, dialect='excel-tab')
+        with open(dst_path, 'w', encoding='cp1251') as f:
+            csv_writer = csv.DictWriter(f, fieldnames=attrs, dialect='unix', delimiter=';')
             csv_writer.writeheader()
             for field in header_xml[0].children:
                 csv_writer.writerow({a: field.get_attribute_value(a) for a in attrs})
@@ -331,12 +341,12 @@ def create_bulletin_stub(src_path, dst_path, xslt_path, base_name, all_ones=Fals
             'last_quest': last_quest,
         }
 
-        with open(dst_path, 'w') as f:
+        with open(dst_path, 'w', encoding='utf-8') as f:
             hjson.dump(json, f, ensure_ascii=False)
 
 
 def create_url_file(file, url):
-    with open(file, 'w') as f:
+    with open(file, 'w', encoding='utf-8') as f:
         f.write(textwrap.dedent(f'''\
       [{{000214A0-0000-0000-C000-000000000046}}]
       Prop3=19,2
@@ -359,14 +369,14 @@ def transform_html(src_file, dst_dir, options):
         files[-1] = files[-1].replace(f'href="quest{len(files)}.html"',
                                       f'rel="external" href="{options.exit_url}"')
         for i, text in enumerate(files):
-            with open(os.path.join(dst_dir, f'quest{i}.html'), 'w') as f:
+            with open(os.path.join(dst_dir, f'quest{i}.html'), 'w',
+                      encoding='utf-8') as f:
                 f.write(text)
-        print(len(files))
+        print(f'Generated {len(files) - 1} quests successfully')
 
 
-# noinspection HttpUrlsUsage
-def correct_header(file):
-    with open(file, 'r') as f:
+def correct_xml_header(file):
+    with open(file, 'r', encoding='utf-8') as f:
         text = f.read()
     if 'https://questionary.iris-psy.org.ua/schema2' in text:
         return
@@ -375,20 +385,17 @@ def correct_header(file):
                   '             xmlns="https://questionary.iris-psy.org.ua/schema2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
                   '             xsi:schemaLocation="https://questionary.iris-psy.org.ua/schema2 https://questionary.iris-psy.org.ua/questionary2.xsd">',
                   text)
-    with open(file, 'w') as f:
+    with open(file, 'w', encoding='utf-8') as f:
         f.write(text)
 
 
-def process_file(file, options):
-    base_name, _ = os.path.splitext(os.path.basename(file))
+def process_file(in_file, options):
+    base_name, _ = os.path.splitext(os.path.basename(in_file))
     out_dir = os.path.join(options.output_dir, base_name)
     os.makedirs(out_dir, exist_ok=options.override)
-    file = shutil.copy2(file, out_dir)
-    correct_header(file)
+    file = shutil.copy2(in_file, out_dir)
+    correct_xml_header(file)
     if not validate(file, options.scheme_file, options.ignore_schema):
-        if options.block_on_error:
-            print("Press Enter to continue...", file=sys.stderr)
-            input()
         return False
     create_url_file(os.path.join(out_dir, base_name + '.url'),
                     f'{options.base_url}#{base_name}')
@@ -402,21 +409,36 @@ def process_file(file, options):
                          options.bulletin_xslt, base_name, options.bulletin_all_combinations)
     transform_html(file, out_dir, options)
     if options.remove_input:
-        os.remove(file)
+        os.remove(in_file)
     return True
+
+
+@contextlib.contextmanager
+def maybe_block_on_error(block_on_error):
+    global has_errors
+    try:
+        yield
+    except Exception:
+        has_errors = True
+        traceback.print_exc()
+    finally:
+        if has_errors and block_on_error:
+            print("Press Enter to continue...", file=sys.stderr)
+            input()
 
 
 def main(options):
     # print(options)
-    if options.input_dir:
-        for file in os.listdir(options.input_dir):
-            if not file.endswith('.xml'):
-                continue
-            if not process_file(os.path.join(options.input_dir, file), options):
+    with maybe_block_on_error(options.block_on_error):
+        if options.input_dir:
+            for file in os.listdir(options.input_dir):
+                if not file.endswith('.xml'):
+                    continue
+                if not process_file(os.path.join(options.input_dir, file), options):
+                    return 1
+        else:
+            if not process_file(options.input_file, options):
                 return 1
-    else:
-        if not process_file(options.input_file, options):
-            return 1
 
 
 if __name__ == '__main__':
