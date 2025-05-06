@@ -13,10 +13,50 @@
     <xsl:param name="id"/>
     <xsl:param name="text" required="no"/>
     <field>
-      <xsl:attribute name="id" select="$id"></xsl:attribute>
+      <xsl:attribute name="id" select="$id"/>
       <xsl:attribute name="text" select="$text"/>
       <xsl:call-template name="parent-text"/>
+      <xsl:call-template name="values"/>
     </field>
+  </xsl:template>
+
+  <xsl:template name="values">
+    <xsl:if test="self::answer and parent::*/@type='multiselect' and not(parent::*/@max='1')">
+      <value num="0" text="ні"/>
+      <value num="1" text="так"/>
+    </xsl:if>
+    <xsl:if test="answer and (not(@type='multiselect') or @max='1')">
+      <xsl:for-each select="answer">
+        <value>
+          <xsl:attribute name="num" select="position()"/>
+          <xsl:attribute name="text" select="x:sanitised-text(.)"/>
+        </value>
+      </xsl:for-each>
+    </xsl:if>
+    <xsl:if test="@type='scale'">
+      <xsl:call-template name="scale-values">
+        <xsl:with-param name="current" select="@from"/>
+        <xsl:with-param name="from" select="@from"/>
+        <xsl:with-param name="to" select="@to"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="scale-values">
+    <xsl:param name="from"/>
+    <xsl:param name="to"/>
+    <xsl:param name="current"/>
+    <xsl:if test="$current &lt;= $to">
+      <value>
+        <xsl:attribute name="num" select="$current - $from + 1"/>
+        <xsl:attribute name="text" select="$current"/>
+      </value>
+      <xsl:call-template name="scale-values">
+        <xsl:with-param name="from" select="$from"/>
+        <xsl:with-param name="to" select="$to"/>
+        <xsl:with-param name="current" select="$current + 1"/>
+      </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template name="parent-text">

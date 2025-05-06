@@ -1,17 +1,17 @@
 import argparse
+import contextlib
 import csv
+import linecache
 import os
+import re
 import shutil
 import sys
 import textwrap
-import hjson
-import contextlib
 import traceback
 
-import re
-from lxml import etree
+import hjson
 import saxonche
-import linecache
+from lxml import etree
 
 has_errors = False
 
@@ -107,10 +107,38 @@ def extract_header(src_path, dst_path, xslt_path):
         header_xml = xsltproc.transform_to_value(source_file=src_path,
                                                  stylesheet_file=xslt_path)
         with open(dst_path, 'w', encoding='cp1251') as f:
-            csv_writer = csv.DictWriter(f, fieldnames=attrs, dialect='unix', delimiter=';')
+            values = set()
+            for field in header_xml[0].children:
+                for v in field.children:
+                    values.add(int(v.get_attribute_value('num')))
+            values.discard(0)
+            csv_writer = csv.DictWriter(f, fieldnames=[*attrs, 'values', *sorted(values)],
+                                        dialect='unix', delimiter=';')
             csv_writer.writeheader()
             for field in header_xml[0].children:
-                csv_writer.writerow({a: field.get_attribute_value(a) for a in attrs})
+                row = {a: field.get_attribute_value(a) for a in attrs}
+                for v in field.children:
+                    row[int(v.get_attribute_value('num'))] = v.get_attribute_value('text')
+                row.pop(0, None)
+                csv_writer.writerow(row)
+
+
+def create_sps_labels(src_path, dst_path, xslt_path):
+    with saxonche.PySaxonProcessor(license=False) as proc:
+        xsltproc = proc.new_xslt30_processor()
+        header_xml = xsltproc.transform_to_value(source_file=src_path,
+                                                 stylesheet_file=xslt_path)
+        with open(dst_path, 'w') as f:
+            for field in header_xml[0].children:
+                quest_key = field.get_attribute_value('id')
+                label = field.get_attribute_value('text').replace("'", "''")
+                values = {v.get_attribute_value('num'): v.get_attribute_value('text').replace("'", "''")
+                          for v in field.children}
+                values = '\n'.join(f"{k} '{v}'" for k, v in values.items())
+                f.write(f"VARIABLE LABELS\n{quest_key} '{label}'.\n")
+                if values:
+                    f.write(f"VALUE LABELS\n{quest_key}\n{values}.\n\n")
+            f.write('EXECUTE.')
 
 
 MIN_COMMON_LEN = 10
@@ -405,6 +433,8 @@ def process_file(in_file, options):
                     f'{options.bulletin_url}{base_name}&recalc=1')
     extract_header(file, os.path.join(out_dir, 'header.csv'),
                    options.extract_xslt)
+    create_sps_labels(file, os.path.join(out_dir, 'labels.sps'),
+                      options.extract_xslt)
     create_bulletin_stub(file, os.path.join(out_dir, 'bulletin.hjson'),
                          options.bulletin_xslt, base_name, options.bulletin_all_combinations)
     transform_html(file, out_dir, options)
