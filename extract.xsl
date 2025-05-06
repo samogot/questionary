@@ -106,7 +106,7 @@
     <xsl:param name="element-name"/>
     <xsl:variable name="answer-number" select="count(preceding-sibling::answer)+1"/>
 
-    <xsl:if test="..[@type='multiselect' and @max &gt; 1]">
+    <xsl:if test="..[@type='multiselect' and (@max &gt; 1 or not(@max))]">
       <xsl:call-template name="field">
         <xsl:with-param name="id">
           <xsl:value-of select="$element-name"/>
