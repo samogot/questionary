@@ -109,6 +109,7 @@
 
   <xs:group name="html-inline">
     <xs:choice>
+      <xs:element ref="span"/>
       <xs:element ref="b"/>
       <xs:element ref="i"/>
       <xs:element ref="center"/>
@@ -177,6 +178,14 @@
       <xs:sequence>
         <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="span">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:group ref="html-inline" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="id" use="optional"/>
     </xs:complexType>
   </xs:element>
   <xs:element name="b">
