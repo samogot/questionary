@@ -99,28 +99,34 @@ def validate(src_path: str, schema_path: str, ignore_schema: bool):
     return True
 
 
-def extract_header(src_path, dst_path, xslt_path):
-    attrs = ['id', 'text', 'sticky-text', 'question-text', 'subquestion-text',
-             'answer-text', 'input-text']
-    with saxonche.PySaxonProcessor(license=False) as proc:
-        xsltproc = proc.new_xslt30_processor()
-        header_xml = xsltproc.transform_to_value(source_file=src_path,
-                                                 stylesheet_file=xslt_path)
-        with open(dst_path, 'w', encoding='cp1251') as f:
-            values = set()
-            for field in header_xml[0].children:
-                for v in field.children:
-                    values.add(int(v.get_attribute_value('num')))
-            values.discard(0)
-            csv_writer = csv.DictWriter(f, fieldnames=[*attrs, 'values', *sorted(values)],
-                                        dialect='unix', delimiter=';')
-            csv_writer.writeheader()
-            for field in header_xml[0].children:
-                row = {a: field.get_attribute_value(a) for a in attrs}
-                for v in field.children:
-                    row[int(v.get_attribute_value('num'))] = v.get_attribute_value('text')
-                row.pop(0, None)
-                csv_writer.writerow(row)
+def extract_header(src_path, dst_path, xslt_path, encoding='cp1251'):
+    try:
+        attrs = ['id', 'text', 'sticky-text', 'question-text', 'subquestion-text',
+                 'answer-text', 'input-text']
+        with saxonche.PySaxonProcessor(license=False) as proc:
+            xsltproc = proc.new_xslt30_processor()
+            header_xml = xsltproc.transform_to_value(source_file=src_path,
+                                                     stylesheet_file=xslt_path)
+            with open(dst_path, 'w', encoding=encoding) as f:
+                values = set()
+                for field in header_xml[0].children:
+                    for v in field.children:
+                        values.add(int(v.get_attribute_value('num')))
+                values.discard(0)
+                csv_writer = csv.DictWriter(f, fieldnames=[*attrs, 'values', *sorted(values)],
+                                            dialect='unix', delimiter=';')
+                csv_writer.writeheader()
+                for field in header_xml[0].children:
+                    row = {a: field.get_attribute_value(a) for a in attrs}
+                    for v in field.children:
+                        row[int(v.get_attribute_value('num'))] = v.get_attribute_value('text')
+                    row.pop(0, None)
+                    csv_writer.writerow(row)
+    except UnicodeEncodeError:
+        if encoding != 'utf-8':
+            extract_header(src_path, dst_path, xslt_path, 'utf-8')
+        else:
+            raise
 
 
 def create_sps_labels(src_path, dst_path, xslt_path):
