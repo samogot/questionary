@@ -134,7 +134,7 @@ def create_sps_labels(src_path, dst_path, xslt_path):
         xsltproc = proc.new_xslt30_processor()
         header_xml = xsltproc.transform_to_value(source_file=src_path,
                                                  stylesheet_file=xslt_path)
-        with open(dst_path, 'w') as f:
+        with open(dst_path, 'w', encoding='utf-8') as f:
             for field in header_xml[0].children:
                 quest_key = field.get_attribute_value('id')
                 label = field.get_attribute_value('text').replace("'", "''")
